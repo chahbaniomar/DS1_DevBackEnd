@@ -1,41 +1,41 @@
 const asyncHandler = require('express-async-handler');
-const Project = require('../models/Project'); // Import the Project Schema
+const Project = require('../models/Project'); // Import ta3 Project Schema
 
-// @desc    Create a new project
+// @desc    Création ta3 projet jdida
 // @route   POST /api/projects
-// @access  Private (User or Manager)
+// @access  Private (User ou Manager)
 const createProject = asyncHandler(async (req, res) => {
-    // req.user is available because of the 'protect' middleware!
+    // req.user mawjouda b sabab middleware 'protect'!
     const { nom_du_projet, description, statut } = req.body;
 
     if (!nom_du_projet) {
         res.status(400);
-        throw new Error('Project name is required.');
+        throw new Error('Lism ta3 projet lazm ykoun mawjoud.');
     }
 
-    // FIX: Nasta3mlou Project.create() lel-tathmin bech yitpassa el-validation conflict
+    // FIX: Nasta3mlou Project.create() bach npassiw validation conflict
     const createdProject = await Project.create({
         nom_du_projet,
         description,
         statut,
-        // The ID comes from the authenticated user
+        // ID jey men user li authenticated
         proprietaire_du_projet: req.user._id, 
     });
 
     res.status(201).json(createdProject);
 });
 
-// @desc    Get all projects (User sees only their own; Manager sees all)
+// @desc    Jib kol projects (User ychouf li mte3ou; Manager ychouf kolshi)
 // @route   GET /api/projects
-// @access  Private (User or Manager)
+// @access  Private (User ou Manager)
 const getProjects = asyncHandler(async (req, res) => {
-    // If the user is a manager, find all projects
+    // Ken user manager, njibou kol projects
     if (req.user.role === 'manager') {
-        // Manager rule: "Seul le manager peut voir tous les projets de tous les utilisateurs" 
+        // Rule ta3 manager: "Ghir manager yemkin ychouf kol projets ta3 kol users"
         const projects = await Project.find({}).populate('proprietaire_du_projet', 'nom login');
         res.json(projects);
     } else {
-        // User rule: See only their own projects
+        // Rule ta3 user: ychouf ghir projets mte3ou
         const projects = await Project.find({ proprietaire_du_projet: req.user._id }).populate('proprietaire_du_projet', 'nom login');
         res.json(projects);
     }

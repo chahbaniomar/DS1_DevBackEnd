@@ -2,33 +2,33 @@ const asyncHandler = require('express-async-handler');
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 
-// @desc    Create a new task associated with a project
+// @desc    Création d'une nouvelle task m3a projet
 // @route   POST /api/tasks
-// @access  Private (User or Manager)
+// @access  Private (User ou Manager)
 const createTask = asyncHandler(async (req, res) => {
     const { titre, description, statut, deadline, projet_associe } = req.body;
     const currentUserId = req.user._id;
 
     if (!titre || !projet_associe) {
         res.status(400);
-        throw new Error('Task title and associated project are required.');
+        throw new Error('Titre taa task w projet li mratab bihhom lazemhom.');
     }
 
-    // 1. Verify the project exists
+    // 1. Nchoufou ken projet mawjouda
     const project = await Project.findById(projet_associe);
     if (!project) {
         res.status(404);
-        throw new Error('Project not found.');
+        throw new Error('Projet mawjoudch.');
     }
     
-    // 2. Create the task. By default, assign it to the creator.
+    // 2. Ncreateiw task. By default, na3tiwh lel créateur
     const task = new Task({
         titre,
         description,
         statut: statut || 'todo',
         deadline,
         projet_associe,
-        utilisateur_assigne: currentUserId, // Default to creator
+        utilisateur_assigne: currentUserId, // By default lel li 3mlha
     });
 
     const createdTask = await task.save();
@@ -36,9 +36,9 @@ const createTask = asyncHandler(async (req, res) => {
 });
 
 
-// @desc    Update a task (including assignment, restricted to manager)
+// @desc    Update task (yemkin include assignation, manager only)
 // @route   PUT /api/tasks/:id
-// @access  Private (User or Manager)
+// @access  Private (User ou Manager)
 const updateTask = asyncHandler(async (req, res) => {
     const taskId = req.params.id;
     const { titre, description, statut, deadline, utilisateur_assigne } = req.body;
@@ -48,27 +48,27 @@ const updateTask = asyncHandler(async (req, res) => {
 
     if (!task) {
         res.status(404);
-        throw new Error('Task not found');
+        throw new Error('Task mawjoudch');
     }
 
-    // A. Handle task assignment update (Manager-only rule)
+    // A. Update taa assignation (manager bark)
     if (utilisateur_assigne) {
-        // Project requirement: "Seul le manager peut affecter une tâche à un utilisateur"
+        // Rule taa projet: "Ghir manager yemkin y3ayet task lel user"
         if (currentUserRole !== 'manager') {
             res.status(403); // Forbidden
-            throw new Error('Only a manager can assign a task to another user.');
+            throw new Error('Ghir manager yemkin y3ayet task lel user akhor.');
         }
         task.utilisateur_assigne = utilisateur_assigne;
     }
     
-    // B. Handle other updates (Allowed for any user, but typically only the assigned user/manager)
+    // B. Update lkol shay okhor (ay user yemkin, ama normal lel assigned user w manager)
     if (titre) task.titre = titre;
     if (description) task.description = description;
     if (statut) {
-        // Validation is handled by the Mongoose schema, but we can prevent bad status explicitly
+        // Validation mawjouda fl schema Mongoose, ama n9adro n7absou status li ghalta
         if (!['todo', 'doing', 'done'].includes(statut)) {
             res.status(400);
-            throw new Error('Statut must be todo, doing, or done.');
+            throw new Error('Statut lazm ykoun todo, doing, wala done.');
         }
         task.statut = statut;
     }
@@ -79,18 +79,18 @@ const updateTask = asyncHandler(async (req, res) => {
 });
 
 
-// @desc    Get all tasks for a specific project
+// @desc    Jib kol tasks mtaa projet mo3ayan
 // @route   GET /api/tasks/project/:projectId
-// @access  Private (User or Manager)
+// @access  Private (User ou Manager)
 const getTasksByProject = asyncHandler(async (req, res) => {
     const projectId = req.params.projectId;
 
-    // Optional: Add logic to ensure the user has permission to view this project
-    // (e.g., they own it, or they are a manager). For now, we rely on project security.
+    // Optional: n9adro nzido check ken user 3ando permission bach ychouf projet
+    // (e.g., owned by him, wala manager). Tawa, na3mlo confiance fl sécurité taa projet.
     
     const tasks = await Task.find({ projet_associe: projectId })
         .populate('utilisateur_assigne', 'nom login')
-        .sort({ deadline: 1 }); // Simple sorting example
+        .sort({ deadline: 1 }); // example taa sorting basit
 
     res.json(tasks);
 });

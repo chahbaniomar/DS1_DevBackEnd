@@ -1,28 +1,28 @@
-const asyncHandler = require('express-async-handler'); // Helper for handling async errors
-const User = require('../models/utilisateur'); // Import the User Schema
-const generateToken = require('../utils/generateToken'); // Import the JWT generator
+const asyncHandler = require('express-async-handler'); // Helper bach nhandle errors mtaa async
+const User = require('../models/utilisateur'); // Import ta3 User Schema
+const generateToken = require('../utils/generateToken'); // Import JWT generator
 
-// @desc    Register a new user
+// @desc    Register user jdida
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-    // 1. Get user data from the request body
+    // 1. Njeebou data taa user men req.body
     const { nom, login, mot_de_passe, role } = req.body;
 
-    // 2. Check if the user already exists
+    // 2. Nchoufou ken user mawjouda deja
     const userExists = await User.findOne({ login });
 
     if (userExists) {
         res.status(400); // Bad Request
-        throw new Error('User with this login already exists.'); // The asyncHandler will catch this
+        throw new Error('User bih login hedha mawjouda deja.');
     }
 
-    // 3. Create the new user (password is automatically hashed by the pre-save hook in models/User.js)
+    // 3. Ncreateiw user jdida (password yet-hash automatiquement fl pre-save hook fi models/User.js)
     const user = await User.create({
         nom,
         login,
         mot_de_passe,
-        role: role || 'user', // Default role is 'user' if not specified
+        role: role || 'user', // Default role 'user' ken ma t3aytch
     });
 
     if (user) {
@@ -31,35 +31,35 @@ const registerUser = asyncHandler(async (req, res) => {
             nom: user.nom,
             login: user.login,
             role: user.role,
-            token: generateToken(user._id, user.role), // Generate JWT
+            token: generateToken(user._id, user.role), // Ngenerateiw JWT
         });
     } else {
         res.status(400);
-        throw new Error('Invalid user data');
+        throw new Error('Data ta3 user ghalta');
     }
 });
 
-// @desc    Authenticate user & get token
+// @desc    Authenticate user w jib token
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
     const { login, mot_de_passe } = req.body;
 
-    // 1. Find the user by login
+    // 1. Nlawa 3la user b login
     const user = await User.findOne({ login });
 
-    // 2. Check if user exists AND if the password matches (using the custom method from models/User.js)
+    // 2. Nchoufou ken user mawjouda w password sahih (using method mtaa models/User.js)
     if (user && (await user.matchPassword(mot_de_passe))) {
         res.json({
             _id: user._id,
             nom: user.nom,
             login: user.login,
             role: user.role,
-            token: generateToken(user._id, user.role), // Generate JWT
+            token: generateToken(user._id, user.role), // Ngenerateiw JWT
         });
     } else {
         res.status(401); // Unauthorized
-        throw new Error('Invalid login or password');
+        throw new Error('Login wala password ghalta');
     }
 });
 
